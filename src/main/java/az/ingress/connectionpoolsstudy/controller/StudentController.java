@@ -10,7 +10,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @RequestMapping("/students")
@@ -25,10 +24,10 @@ public class StudentController {
     @PostMapping
     public StudentResponseDto create(@RequestBody CreateStudentRequestDto request) {
         Student student = modelMapper.map(request, Student.class);
-        Student studentSaved = sessionFactory.fromTransaction(session -> {
-            session.persist(student);
+        Student studentSaved = sessionFactory.fromStatelessTransaction(session -> {
+            session.insert(student);
             try {
-                Thread.sleep(5_000);
+                Thread.sleep(10_000);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -46,6 +45,6 @@ public class StudentController {
                     return student;
                 })
                 .toList();
-        sessionFactory.inTransaction(session -> students.forEach(session::persist));
+        sessionFactory.inStatelessTransaction(session -> students.forEach(session::insert));
     }
 }
